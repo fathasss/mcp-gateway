@@ -1,0 +1,122 @@
+{
+  "version": "1.0.0",
+  "servers": {
+    "house": {
+      "id": "house",
+      "name": "has-smarthouse-mcp",
+      "description": "Akıllı ev kontrolü: Samsung Smart TV (kumanda, ses, açma/kapama, uygulama açma) ve Robot Süpürge (Ferhunde Dreame/Xiaomi durum, temizlik başlatma, durdurma, dock, ses çıkarma / locate).",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "has-smarthouse-mcp",
+        "node",
+        "index.js"
+      ],
+      "enabled": true,
+      "shortcuts": [
+        "vacuum_get_status",
+        "vacuum_locate",
+        "tv_get_status",
+        "tv_power"
+      ]
+    },
+    "obsidian": {
+      "id": "obsidian",
+      "name": "obsidian",
+      "description": "Yerel Obsidian bilgi bankası, not okuma, not yazma, not listeleme ve dosya sistemi işlemleri.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/fatih/Documents/ObsidianVault"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "crw": {
+      "id": "crw",
+      "name": "crw",
+      "description": "Canlı internet erişimi: Web sitelerini Markdown olarak okuma, site haritası çıkarma, otomatik crawler ve web scraping.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "crw-mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "comfyui": {
+      "id": "comfyui",
+      "name": "comfyui",
+      "description": "ComfyUI yerel görsel üretim iş akışları, model indirme ve kontrol.",
+      "transport": "stdio",
+      "command": "comfy-mcp.cmd",
+      "args": [
+        "--server",
+        "http://127.0.0.1:8188"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "n8n": {
+      "id": "n8n",
+      "name": "n8n-mcp",
+      "description": "n8n iş akışı otomasyonu, agent builder, workflow oluşturma ve çalıştırma.",
+      "transport": "http",
+      "url": "http://localhost:5678/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer ${N8N_TOKEN}"
+      },
+      "enabled": true,
+      "shortcuts": []
+    },
+    "rea": {
+      "id": "rea",
+      "name": "rea",
+      "description": "Tersine mühendislik (reverse engineering), Android APK analizi, Ghidra/IDA native disasm, fonksiyon ve talimat çözümleme (200+ uzman araç).",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "rea-agents",
+        "--mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "unreal": {
+      "id": "unreal",
+      "name": "unreal-mcp",
+      "description": "Unreal Engine 5 editör otomasyonu, aktör, blueprint, level ve asset yönetimi.",
+      "transport": "http",
+      "url": "http://127.0.0.1:8000/mcp",
+      "enabled": true,
+      "shortcuts": []
+    },
+    "unity": {
+      "id": "unity",
+      "name": "unityMCP",
+      "description": "Unity 3D oyun motoru hiyerarşi, GameObject, component ve C# script kontrolü.",
+      "transport": "http",
+      "url": "http://127.0.0.1:9000/mcp",
+      "enabled": true,
+      "shortcuts": []
+    },
+    "blender": {
+      "id": "blender",
+      "name": "blender",
+      "description": "Blender 3D modelleme, bpy Python scriptleri, obje oluşturma ve render işlemleri.",
+      "transport": "stdio",
+      "command": "uvx",
+      "args": [
+        "blender-mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    }
+  }
+}

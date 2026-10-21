@@ -1,0 +1,14 @@
+{
+  "name": "mcp-gateway",
+  "version": "1.0.0",
+  "description": "Multi-Agent MCP Gateway & Intelligent Tool Router for Gemini CLI",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "refresh": "node -e \"import('./src/tool-registry.js').then(m => m.refreshCache())\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1"
+  }
+}
