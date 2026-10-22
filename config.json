@@ -119,6 +119,36 @@
       ],
       "enabled": true,
       "shortcuts": []
+    },
+    "prompts": {
+      "id": "prompts",
+      "name": "prompts.chat",
+      "description": "Yapay zeka sistemleri için hazır prompt kütüphanesi (Awesome ChatGPT Prompts): Prompt arama, şablon getirme ve değişken doldurma.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "prompts.chat",
+        "mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "browser-use": {
+      "id": "browser-use",
+      "name": "browser-use",
+      "description": "Browser Use web tarayıcı otomasyonu: Sayfa açma, gezinme, tıklama, form doldurma, veri çıkarma ve ekran görüntüsü alma.",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "browseruse-daemon",
+        "browser-use",
+        "--mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
     }
   }
 }

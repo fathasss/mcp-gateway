@@ -57,6 +57,8 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 | **`obsidian`** | stdio (npx) | Yerel Obsidian bilgi kasası not okuma, yazma ve dosya işlemleri | 14 araç |
 | **`crw`** | stdio (npx) | Canlı internet erişimi, Markdown dönüştürücü ve web scraping | 8 araç |
 | **`comfyui`** | stdio (cmd) | ComfyUI yerel görsel üretim iş akışları | Dinamik |
+| **`prompts`** | stdio (npx) | Hazır prompt şablonları kütüphanesi (Awesome ChatGPT Prompts) | 2 araç |
+| **`browser-use`** | stdio (Docker) | Tarayıcı otomasyonu: Sayfa açma, gezinme, tıklama, form doldurma, ekran görüntüsü | 16 araç |
 
 ---
 

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "refresh": "node -e \"import('./src/tool-registry.js').then(m => m.refreshCache())\""
+    "refresh": "node refresh.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1"
