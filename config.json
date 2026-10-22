@@ -52,13 +52,15 @@
     "comfyui": {
       "id": "comfyui",
       "name": "comfyui",
-      "description": "ComfyUI yerel görsel üretim iş akışları, model indirme ve kontrol.",
+      "description": "ComfyUI yerel görsel üretim iş akışları, model yönetimi, prompt çalıştırma ve template varyasyonları (Port 8088).",
       "transport": "stdio",
-      "command": "comfy-mcp.cmd",
-      "args": [
-        "--server",
-        "http://127.0.0.1:8188"
-      ],
+      "command": "C:\\Users\\fatih\\AppData\\Roaming\\Python\\Python313\\Scripts\\comfy-mcp.exe",
+      "args": [],
+      "env": {
+        "COMFYUI_URL": "http://127.0.0.1:8088",
+        "COMFY_LOCAL_URL": "http://127.0.0.1:8088",
+        "COMFYUI_PORT": "8088"
+      },
       "enabled": true,
       "shortcuts": []
     },
