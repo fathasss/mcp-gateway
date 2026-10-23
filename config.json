@@ -69,7 +69,7 @@
       "name": "n8n-mcp",
       "description": "n8n iş akışı otomasyonu, agent builder, workflow oluşturma ve çalıştırma.",
       "transport": "http",
-      "url": "http://localhost:5678/mcp-server/http",
+      "url": "http://localhost:8678/mcp-server/http",
       "headers": {
         "Authorization": "Bearer ${N8N_TOKEN}"
       },
