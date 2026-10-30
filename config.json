@@ -184,6 +184,15 @@
       ],
       "enabled": true,
       "shortcuts": []
+    },
+    "whatsapp": {
+      "id": "whatsapp",
+      "name": "whatsapp-whiskeysocket",
+      "description": "WhatsApp çoklu hesap ve oturum yönetimi (Baileys): Bireysel ve grup mesajlaşma (metin, medya, sesli not, konum, kartvizit, anket, reaksiyon), QR kod ile oturum açma, profil, durum/hikaye paylaşımı ve ilişkisel aktivite geçmişi.",
+      "transport": "http",
+      "url": "http://localhost:3002/mcp",
+      "enabled": true,
+      "shortcuts": []
     }
   }
 }

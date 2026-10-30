@@ -52,6 +52,7 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 | **`rea`** | stdio (npx) | Tersine mühendislik: APK, Ghidra, IDA, radare2, decompilation analizi | 207 araç |
 | **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma (`:9876`) | 55 araç |
 | **`comfyui`** | stdio (exe) | ComfyUI yerel görsel üretim iş akışları ve model yönetimi (`:8088`) | 39 araç |
+| **`whatsapp`** | StreamableHTTP | WhatsApp çoklu oturum, bireysel/grup mesajlaşma, medya, QR kod ve aktivite yönetimi (`:3002`) | 32 araç |
 | **`gods-eye-view`** | stdio (Docker) | 3D dünya ve gerçek zamanlı OSINT/GEOINT konsolu: Uçuş, askeri hava trafiği, gemi (AIS), uydu, deprem, yangın, CCTV/ALPR kamera (`:4173`) | 30 araç |
 | **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo otomatik kısa video (Shorts/Reels/TikTok), senaryo, TTS ve altyazı üretimi | 17 araç |
 | **`obsidian`** | stdio (npx) | Yerel Obsidian bilgi kasası not okuma, yazma ve dosya işlemleri | 14 araç |
