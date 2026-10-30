@@ -1,169 +1,187 @@
 # MCP Gateway (Multi-Agent Dynamic Tool Router)
 
-Gemini CLI, Claude ve LLM modelleri için çoklu MCP (Model Context Protocol) sunucularını tek bir çatı altında birleştiren, token tasarruflu akıllı gateway ve yönlendirici.
+<div align="center">
+
+[**English**](README.md) · [**Türkçe**](README.tr.md)
+
+</div>
+
+Gemini CLI, Claude, and LLM models often struggle with high token usage and function declaration limits. **MCP Gateway** consolidates multiple MCP (Model Context Protocol) servers under a single intelligent, dynamic routing layer.
 
 ---
 
-## 🚀 Neden MCP Gateway?
+## 🚀 Why MCP Gateway?
 
-Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon deklarasyonu sınırına** sahiptir. Çok sayıda MCP sunucusu (özellikle 200+ araç barındıran tersine mühendislik ajanları gibi) doğrudan istemciye bağlandığında:
-1. **`400 INVALID_ARGUMENT`** hatası alınır (fonksiyon sınırı aşılır).
-2. Her bir prompt sorgusunda yüzlerce fonksiyon şeması modele gönderildiğinden sorgu başına **80.000+ gereksiz token** harcanır.
-3. Editörler (Unreal, Unity vb.) kapalı olduğunda istemci bağlantı hataları verir.
+Google Gemini API and many modern LLM clients have strict **64 or 128 function declaration limits**. When multiple MCP servers (especially reverse engineering or complex tooling with 200+ tools) are connected directly:
+1. **`400 INVALID_ARGUMENT`** occurs due to exceeding function declaration caps.
+2. Every prompt turn sends hundreds of tool definitions, consuming **80,000+ unnecessary tokens** per request.
+3. If an editor (Unreal, Unity, etc.) is closed, the client throws connection errors and breaks the session.
 
-**MCP Gateway**, arka plandaki **400+ aracı** Gemini'ye sadece **8 temel araç** olarak sunar. İhtiyaç duyulan fonksiyonları dinamik indeks üzerinden arar (`search_tools`) ve çalıştırır (`call_tool`).
+**MCP Gateway** exposes only **8 core orchestrator tools** to the client while managing **400+ tools** in the background. It dynamically searches (`search_tools`) and invokes (`call_tool`) tools on demand.
 
 ---
 
-## 🏛️ Mimari Şema
+## 🏛️ Architecture Overview
 
 ```
-                                  [ Gemini CLI ]
-                       (Sadece 8 araç görür: ~300 token yükü)
-                         ├── search_tools (Araç arama)
-                         ├── call_tool (Dinamik çalıştırma)
-                         ├── list_mcp_servers (Sunucu durumları)
-                         ├── refresh_tools_index (İndeks güncelleme)
-                         └── [Hızlı Kısayollar]
-                               ├── vacuum_get_status / vacuum_locate
-                               └── tv_get_status / tv_power
-                                        │
-                                        │ (stdio)
-                                        ▼
-                                 [ mcp-gateway ]
-                                        │
-      ┌───────────┬───────────┬─────────┼─────────┬───────────┬───────────┐
-      │ (stdio)   │ (stdio)   │ (stdio) │ (stdio) │ (HTTP)    │ (Stream)  │ (Çoklu)
-      ▼           ▼           ▼         ▼         ▼           ▼           ▼
-   [House]      [REA]    [Obsidian]   [CRW]     [n8n]      [Unreal]   [GEV/Diğer]
-  (18 Araç)   (207 Araç)  (14 Araç)  (8 Araç)  (55 Araç)    (3 Araç)   (30+ Araç)
-      │                                                       │
-  [Docker]                                                [Port 8000]
- (Ferhunde)                                                (UE5 MCP)
+                                  [ Gemini CLI / Claude ]
+                           (Sees only 8 core tools: ~300 tokens)
+                             ├── search_tools (Dynamic tool discovery)
+                             ├── call_tool (Sub-server execution)
+                             ├── list_mcp_servers (Server health & count)
+                             ├── refresh_tools_index (Cache re-indexing)
+                             └── [Instant Shortcuts]
+                                   ├── vacuum_get_status / vacuum_locate
+                                   └── tv_get_status / tv_power
+                                            │
+                                            │ (stdio)
+                                            ▼
+                                     [ mcp-gateway ]
+                                            │
+          ┌───────────┬───────────┬─────────┼─────────┬───────────┬───────────┐
+          │ (stdio)   │ (stdio)   │ (stdio) │ (stdio) │ (HTTP)    │ (Stream)  │ (Multi)
+          ▼           ▼           ▼         ▼         ▼           ▼           ▼
+       [House]      [REA]    [Obsidian]   [CRW]     [n8n]      [Unreal]   [GEV/Others]
+      (18 Tools)  (207 Tools) (14 Tools) (8 Tools) (55 Tools)  (3 Tools)   (30+ Tools)
+          │                                                       │
+      [Docker]                                                [Port 8000]
+     (Ferhunde)                                                (UE5 MCP)
 ```
 
 ---
 
-## 🔌 Desteklenen & Bağlı MCP Sunucuları
+## 🔌 Connected & Supported MCP Servers
 
-| Sunucu Adı | Taşıma | Açıklama | Araç Sayısı |
+| Server Name | Transport | Description | Tool Count |
 | :--- | :--- | :--- | :--- |
-| **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max ("Ferhunde") süpürge ve Samsung Smart TV kontrolü | 18 araç |
-| **`rea`** | stdio (npx) | Tersine mühendislik: APK, Ghidra, IDA, radare2, decompilation analizi | 207 araç |
-| **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma (`:9876`) | 55 araç |
-| **`comfyui`** | stdio (exe) | ComfyUI yerel görsel üretim iş akışları ve model yönetimi (`:8088`) | 39 araç |
-| **`whatsapp`** | StreamableHTTP | WhatsApp çoklu oturum, bireysel/grup mesajlaşma, medya, QR kod ve aktivite yönetimi (`:3002`) | 32 araç |
-| **`gods-eye-view`** | stdio (Docker) | 3D dünya ve gerçek zamanlı OSINT/GEOINT konsolu: Uçuş, askeri hava trafiği, gemi (AIS), uydu, deprem, yangın, CCTV/ALPR kamera (`:4173`) | 30 araç |
-| **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo otomatik kısa video (Shorts/Reels/TikTok), senaryo, TTS ve altyazı üretimi | 17 araç |
-| **`obsidian`** | stdio (npx) | Yerel Obsidian bilgi kasası not okuma, yazma ve dosya işlemleri | 14 araç |
-| **`blender`** | stdio (uvx) | Blender 3D modelleme, bpy Python scriptleri ve render | 9 araç |
-| **`crw`** | stdio (npx) | Canlı internet erişimi, Markdown dönüştürücü ve web scraping | 8 araç |
-| **`has-search`** | stdio (Docker) | Büyük doküman indeksleme (PDF, MD, TXT) ve yerel LanceDB + MiniLM anlamsal arama (RAG) | 4 araç |
-| **`unreal`** | StreamableHTTP | Unreal Engine 5 editör otomasyonu, aktör, level, blueprint yönetimi (`:8000`) | 3 araç |
-| **`prompts`** | stdio (npx) | Hazır prompt şablonları kütüphanesi (Awesome ChatGPT Prompts) | 2 araç |
-| **`unity`** | http (`:9000`) | Unity 3D hiyerarşi, GameObject, bileşen ve C# script kontrolü | Dinamik |
+| **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max vacuum & Samsung Smart TV control | 18 tools |
+| **`rea`** | stdio (npx) | Reverse engineering: APK, Ghidra, IDA, radare2, decompilation analysis | 207 tools |
+| **`n8n`** | http (SSE) | Workflow automation, agent builder, workflow runner (`:9876`) | 55 tools |
+| **`comfyui`** | stdio (exe) | ComfyUI local image generation workflows & model management (`:8088`) | 39 tools |
+| **`whatsapp`** | StreamableHTTP | WhatsApp multi-session, group/chat messaging, media, QR, activity history (`:3002`) | 32 tools |
+| **`gods-eye-view`** | stdio (Docker) | 3D globe real-time OSINT/GEOINT: Live flights, military radar, ships (AIS), satellites, quakes, CCTV/ALPR (`:4173`) | 30 tools |
+| **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo automated video generation (Shorts/Reels/TikTok), TTS, subtitles | 17 tools |
+| **`obsidian`** | stdio (npx) | Local Obsidian knowledge vault note read/write & filesystem operations | 14 tools |
+| **`blender`** | stdio (uvx) | Blender 3D modeling, bpy Python scripts, rendering | 9 tools |
+| **`crw`** | stdio (npx) | Live internet access, Markdown conversion, web crawling & scraping | 8 tools |
+| **`has-search`** | stdio (Docker) | Large document indexing (PDF, MD, TXT) with local LanceDB + MiniLM semantic search (RAG) | 4 tools |
+| **`unreal`** | StreamableHTTP | Unreal Engine 5 editor automation, actor, blueprint, level, asset management (`:8000`) | 3 tools |
+| **`prompts`** | stdio (npx) | Curated AI prompt templates library (Awesome ChatGPT Prompts) | 2 tools |
+| **`unity`** | http (`:9000`) | Unity 3D engine hierarchy, GameObject, component, and C# script control | Dynamic |
 
 ---
 
-## ✨ Öne Çıkan Özellikler
+## ✨ Key Features
 
-- **Çoklu Protokol Desteği:** `stdio`, standart `SSE` ve Unreal Engine 5 gibi modern sistemler için oturum tabanlı **`StreamableHTTP`** desteği.
-- **Hızlı Kısayollar (Shortcuts):** Sık kullanılan refleksif komutlar (Ferhunde süpürge durumu, TV kumandası vb.) arama adımı olmadan tek adımda çalışır.
-- **Güvenli Token Yönetimi:** Hassas tokenlar `.env` dosyasından okunur; `config.json` içindeki `${TOKEN_NAME}` şablonları çalışma anında otomatik çözümlenir.
-- **Çift Dilli (TR / EN) Akıllı Arama:** Gateway hem Türkçe hem İngilizce dil modunu destekler. Gelişmiş eşanlamlı genişletici (synonym engine) sayesinde `"deprem"` araması İngilizce `get_earthquakes` aracını, `"aircraft"` araması ise ilgili Türkçe veya İngilizce araçları otomatik bulur.
-- **Toleranslı Çalışma (Fault Tolerant):** Oyun motorları (Unreal/Unity) veya harici servisler kapalıyken gateway çökmez; hata sessizce yakalanır ve servis açıldığında tek komutla bağlanır.
-
----
-
-## ⚡ Özel Port ve Çakışma Yönetimi
-
-Bazı MCP sunucuları varsayılan olarak aynı portları kullanır veya yerel servislerle çakışır. Gateway mimarisinde bu portlar ayrıştırılmıştır:
-
-* **Unreal Engine 5 MCP (`:8000`):** Unreal Engine MCP eklentisi varsayılan `8000` portundan Streamable HTTP olarak yayın yapar.
-* **Unity 3D MCP (`:9000`):** Unity MCP sunucusu da varsayılan olarak `8000` portunu kullanmak ister. Port çakışmasını önlemek adına Unity tarafında dinleme portu `9000` olarak yapılandırılmıştır (`http://127.0.0.1:9000/mcp`).
-* **n8n Automation (`:9876`):** n8n varsayılan portu `5678` yerine Docker üzerinde `9876` dış portuna yönlendirilmiştir (`http://localhost:9876/mcp-server/http`).
-* **ComfyUI (`:8088`):** Standart `8188` portu yerine `8088` üzerinde çalışır.
-* **God's Eye View (`:4173`):** Web arayüzü ve API dev sunucusu `4173` portundadır.
-* **WhatsApp WhiskeySocket (`:3002`):** Baileys MCP Streamable HTTP servisi `3002` portunda çalışır (`http://localhost:3002/mcp`).
+- **Multi-Protocol Support:** Seamless communication over `stdio`, standard `SSE`, and session-based **`StreamableHTTP`**.
+- **Reflex Shortcuts:** Frequently used quick commands (vacuum status, TV remote, etc.) execute directly without search steps.
+- **Secure Token Management:** Sensitive credentials reside in `.env`; `${TOKEN_NAME}` templates in `config.json` resolve at runtime.
+- **Bilingual (TR / EN) Intelligent Search:** Built-in synonym engine bridges cross-language searches (e.g. searching `"deprem"` discovers English `get_earthquakes`).
+- **Fault Tolerant:** If external game engines or services are offline, the gateway remains resilient; requests fail gracefully and reconnect once back online.
 
 ---
 
-## 🛠️ CLI ile Dinamik MCP Sunucusu Ekleme & Yönetme
+## ⚡ Custom Port & Collision Management
 
-Herhangi bir JSON dosyasını elle düzenlemeden veya gateway'i kapatmadan doğrudan komut satırından MCP sunucusu ekleyebilir, silebilir ve yönetebilirsiniz:
+Several MCP servers default to the same port or conflict with local web applications. The gateway topology isolates them cleanly:
+
+* **Unreal Engine 5 MCP (`:8000`):** Default Unreal Engine MCP Streamable HTTP service.
+* **Unity 3D MCP (`:9000`):** Unity MCP defaults to `8000`. To prevent collisions with Unreal Engine, Unity MCP is configured to listen on port `9000` (`http://127.0.0.1:9000/mcp`).
+* **n8n Automation (`:9876`):** Mapped from internal `5678` to host `9876` (`http://localhost:9876/mcp-server/http`).
+* **ComfyUI (`:8088`):** Runs on port `8088` instead of default `8188`.
+* **God's Eye View (`:4173`):** Web client & API proxy dev server operates on port `4173`.
+* **WhatsApp WhiskeySocket (`:3002`):** Baileys MCP Streamable HTTP endpoint runs on port `3002` (`http://localhost:3002/mcp`).
+
+---
+
+## 🛠️ CLI Dynamic Server Management
+
+Add, remove, and manage sub-servers from the command line without editing JSON files or restarting the gateway:
 
 ```bash
-# Tüm sunucuları ve durumlarını listele
+# List all servers and runtime tool count
 npm run mcp -- list
 
-# 1. HTTP / StreamableHTTP sunucusu ekleme (Tekil veya Çoklu Dil Açıklaması ile)
-npm run mcp -- add whatsapp --url http://localhost:3002/mcp --desc-tr "WhatsApp Mesajlaşma" --desc-en "WhatsApp Messaging"
+# 1. Add an HTTP / StreamableHTTP server (with optional bilingual descriptions)
+npm run mcp -- add whatsapp --url http://localhost:3002/mcp --desc-en "WhatsApp Messaging" --desc-tr "WhatsApp Mesajlaşma"
 
-# 2. Stdio sunucusu ekleme (komut '--' sonrasına yazılır)
-npm run mcp -- add my-server --desc "Örnek stdio sunucu" -- node C:/path/to/server.js
+# 2. Add a Stdio server (command follows '--')
+npm run mcp -- add my-server --desc "Custom stdio server" -- node C:/path/to/server.js
 
-# 3. Docker exec ile stdio sunucusu ekleme
-npm run mcp -- add docker-mcp --desc "Konteyner içi MCP" -- docker exec -i my-container node index.js
+# 3. Add a Docker container stdio server
+npm run mcp -- add docker-mcp --desc "Container MCP" -- docker exec -i my-container node index.js
 
-# 4. Hazır JSON veya farklı formatları (Claude/OpenCode/Gemini) yapıştırarak ekleme
+# 4. Import from raw JSON (supports Claude, OpenCode, Gemini formats)
 npm run mcp -- add-json '{"custom-mcp": {"type": "remote", "url": "http://localhost:4000/mcp"}}'
 
-# Sunucu durumlarını değiştirme veya silme
+# Enable, disable, or remove servers
 npm run mcp -- disable unreal
 npm run mcp -- enable unreal
 npm run mcp -- remove my-server
 
-# Tek bir sunucunun veya tüm indeksin önbelleğini yenileme
+# Refresh single server cache or full index
 npm run mcp -- refresh whatsapp
 npm run mcp -- refresh
 ```
 
 ---
 
-## 🔒 Güvenlik & GitHub Gönderimi (Sanitization)
+## 🔒 Security & Git Sanitization
 
-Projede iki katmanlı güvenlik uygulanır:
-1. **`.gitignore` Koruması:** `.env` ve çalışma zamanı önbelleği olan `tools-cache.json` doğrudan `.gitignore` içindedir; hiçbir zaman Git geçmişine girmez.
-2. **Config Maskeleme (`npm run mask`):** `config.json` içerisindeki yerel Windows kullanıcı adları ve özel dosya yolları GitHub'a gönderilmeden önce maskelenerek `config.example.json` oluşturulur:
+1. **`.gitignore` Isolation:** `.env`, `config.json`, and dynamic runtime cache `tools-cache.json` are excluded from Git to prevent credential and local path leaks.
+2. **Configuration Masking (`npm run mask`):** Generates a sanitized `config.example.json` with generic paths and token placeholders:
    ```bash
    npm run mask
    ```
-   Hassas API anahtarları ise `config.json` içinde düz metin olarak değil, `${N8N_TOKEN}` gibi dinamik ortam değişkeni şablonları olarak tutulur.
 
 ---
 
-## ⚙️ Kurulum & Yapılandırma
+## ⚙️ Installation & Setup
 
-### 1. Bağımlılıkları Yükleyin
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Ortam Değişkenlerini Tanımlayın
-`.env.example` dosyasını `.env` olarak kopyalayın ve tokenlarınızı girin:
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and provide your secrets:
 ```env
 N8N_TOKEN=your_jwt_token_here
 ```
 
-### 3. Araçları İndeksleyin
-Bağlı sunuculardaki araçları yerel önbelleğe (`tools-cache.json`) almak için:
+### 3. Index Tools
+To index tools from connected servers into local cache:
 ```bash
 npm run refresh
 ```
 
 ---
 
-## 🤖 Gemini CLI Entegrasyonu
+## 🤖 Gemini CLI & Claude CLI Integration
 
-Gemini CLI ayar dosyanıza (`~/.gemini/settings.json`) sadece gateway'i eklemeniz yeterlidir:
-
+### Gemini CLI (`~/.gemini/settings.json`)
 ```json
 {
   "mcpServers": {
     "mcp-gateway": {
       "command": "node",
       "args": [
-        "C:/Users/fatih/Desktop/apps/mcp-gateway/index.js"
+        "C:/Users/USERNAME/Desktop/apps/mcp-gateway/index.js"
+      ]
+    }
+  }
+}
+```
+
+### Claude CLI (`~/.claude.json`)
+```json
+{
+  "mcpServers": {
+    "mcp-gateway": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:/Users/USERNAME/Desktop/apps/mcp-gateway/index.js"
       ]
     }
   }
@@ -172,29 +190,5 @@ Gemini CLI ayar dosyanıza (`~/.gemini/settings.json`) sadece gateway'i eklemeni
 
 ---
 
-## 🛠️ Kullanım Örnekleri (Gemini CLI)
-
-- **Ev Kontrolü:**  
-  `> Ferhunde ne durumda?`  
-  *(Shortcut üzerinden `vacuum_get_status` doğrudan tetiklenir)*
-
-- **Unreal Engine:**  
-  `> Unreal'daki toolset'leri listele`  
-  *(Gateway arka planda `list_toolsets` aracını bulup çalıştırır)*
-
-- **Tersine Mühendislik:**  
-  `> Şu APK dosyasının manifestini analiz et`  
-  *(Gateway 207 araç içinden uygun REA analiz aracını dinamik seçer)*
-
-- **God's Eye View (OSINT / Harita):**  
-  `> Son 24 saatteki depremleri getir ve haritada göster`  
-  *(Gateway `gods-eye-view` üzerinden `get_earthquakes` aracını çalıştırıp canlı harita bağlantısı döner)*
-
-- **İndeks Yenileme:**  
-  `> MCP indeksini yenile`  
-  *(Model `refresh_tools_index` fonksiyonunu çağırarak önbelleği günceller)*
-
----
-
-## 📄 Lisans
+## 📄 License
 MIT
