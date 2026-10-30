@@ -70,7 +70,65 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 - **Çoklu Protokol Desteği:** `stdio`, standart `SSE` ve Unreal Engine 5 gibi modern sistemler için oturum tabanlı **`StreamableHTTP`** desteği.
 - **Hızlı Kısayollar (Shortcuts):** Sık kullanılan refleksif komutlar (Ferhunde süpürge durumu, TV kumandası vb.) arama adımı olmadan tek adımda çalışır.
 - **Güvenli Token Yönetimi:** Hassas tokenlar `.env` dosyasından okunur; `config.json` içindeki `${TOKEN_NAME}` şablonları çalışma anında otomatik çözümlenir.
+- **Çift Dilli (TR / EN) Akıllı Arama:** Gateway hem Türkçe hem İngilizce dil modunu destekler. Gelişmiş eşanlamlı genişletici (synonym engine) sayesinde `"deprem"` araması İngilizce `get_earthquakes` aracını, `"aircraft"` araması ise ilgili Türkçe veya İngilizce araçları otomatik bulur.
 - **Toleranslı Çalışma (Fault Tolerant):** Oyun motorları (Unreal/Unity) veya harici servisler kapalıyken gateway çökmez; hata sessizce yakalanır ve servis açıldığında tek komutla bağlanır.
+
+---
+
+## ⚡ Özel Port ve Çakışma Yönetimi
+
+Bazı MCP sunucuları varsayılan olarak aynı portları kullanır veya yerel servislerle çakışır. Gateway mimarisinde bu portlar ayrıştırılmıştır:
+
+* **Unreal Engine 5 MCP (`:8000`):** Unreal Engine MCP eklentisi varsayılan `8000` portundan Streamable HTTP olarak yayın yapar.
+* **Unity 3D MCP (`:9000`):** Unity MCP sunucusu da varsayılan olarak `8000` portunu kullanmak ister. Port çakışmasını önlemek adına Unity tarafında dinleme portu `9000` olarak yapılandırılmıştır (`http://127.0.0.1:9000/mcp`).
+* **n8n Automation (`:9876`):** n8n varsayılan portu `5678` yerine Docker üzerinde `9876` dış portuna yönlendirilmiştir (`http://localhost:9876/mcp-server/http`).
+* **ComfyUI (`:8088`):** Standart `8188` portu yerine `8088` üzerinde çalışır.
+* **God's Eye View (`:4173`):** Web arayüzü ve API dev sunucusu `4173` portundadır.
+* **WhatsApp WhiskeySocket (`:3002`):** Baileys MCP Streamable HTTP servisi `3002` portunda çalışır (`http://localhost:3002/mcp`).
+
+---
+
+## 🛠️ CLI ile Dinamik MCP Sunucusu Ekleme & Yönetme
+
+Herhangi bir JSON dosyasını elle düzenlemeden veya gateway'i kapatmadan doğrudan komut satırından MCP sunucusu ekleyebilir, silebilir ve yönetebilirsiniz:
+
+```bash
+# Tüm sunucuları ve durumlarını listele
+npm run mcp -- list
+
+# 1. HTTP / StreamableHTTP sunucusu ekleme (Tekil veya Çoklu Dil Açıklaması ile)
+npm run mcp -- add whatsapp --url http://localhost:3002/mcp --desc-tr "WhatsApp Mesajlaşma" --desc-en "WhatsApp Messaging"
+
+# 2. Stdio sunucusu ekleme (komut '--' sonrasına yazılır)
+npm run mcp -- add my-server --desc "Örnek stdio sunucu" -- node C:/path/to/server.js
+
+# 3. Docker exec ile stdio sunucusu ekleme
+npm run mcp -- add docker-mcp --desc "Konteyner içi MCP" -- docker exec -i my-container node index.js
+
+# 4. Hazır JSON veya farklı formatları (Claude/OpenCode/Gemini) yapıştırarak ekleme
+npm run mcp -- add-json '{"custom-mcp": {"type": "remote", "url": "http://localhost:4000/mcp"}}'
+
+# Sunucu durumlarını değiştirme veya silme
+npm run mcp -- disable unreal
+npm run mcp -- enable unreal
+npm run mcp -- remove my-server
+
+# Tek bir sunucunun veya tüm indeksin önbelleğini yenileme
+npm run mcp -- refresh whatsapp
+npm run mcp -- refresh
+```
+
+---
+
+## 🔒 Güvenlik & GitHub Gönderimi (Sanitization)
+
+Projede iki katmanlı güvenlik uygulanır:
+1. **`.gitignore` Koruması:** `.env` ve çalışma zamanı önbelleği olan `tools-cache.json` doğrudan `.gitignore` içindedir; hiçbir zaman Git geçmişine girmez.
+2. **Config Maskeleme (`npm run mask`):** `config.json` içerisindeki yerel Windows kullanıcı adları ve özel dosya yolları GitHub'a gönderilmeden önce maskelenerek `config.example.json` oluşturulur:
+   ```bash
+   npm run mask
+   ```
+   Hassas API anahtarları ise `config.json` içinde düz metin olarak değil, `${N8N_TOKEN}` gibi dinamik ortam değişkeni şablonları olarak tutulur.
 
 ---
 

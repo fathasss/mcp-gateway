@@ -1,0 +1,198 @@
+{
+  "version": "1.0.0",
+  "servers": {
+    "house": {
+      "id": "house",
+      "name": "has-smarthouse-mcp",
+      "description": "Akıllı ev kontrolü: Samsung Smart TV (kumanda, ses, açma/kapama, uygulama açma) ve Robot Süpürge (Ferhunde Dreame/Xiaomi durum, temizlik başlatma, durdurma, dock, ses çıkarma / locate).",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "has-smarthouse-mcp",
+        "node",
+        "index.js"
+      ],
+      "enabled": true,
+      "shortcuts": [
+        "vacuum_get_status",
+        "vacuum_locate",
+        "tv_get_status",
+        "tv_power"
+      ]
+    },
+    "obsidian": {
+      "id": "obsidian",
+      "name": "obsidian",
+      "description": "Yerel Obsidian bilgi bankası, not okuma, not yazma, not listeleme ve dosya sistemi işlemleri.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/USERNAME/Documents/ObsidianVault"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "crw": {
+      "id": "crw",
+      "name": "crw",
+      "description": "Canlı internet erişimi: Web sitelerini Markdown olarak okuma, site haritası çıkarma, otomatik crawler ve web scraping.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "crw-mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "comfyui": {
+      "id": "comfyui",
+      "name": "comfyui",
+      "description": "ComfyUI yerel görsel üretim iş akışları, model yönetimi, prompt çalıştırma ve template varyasyonları (Port 8088).",
+      "transport": "stdio",
+      "command": "C:/Users/USERNAME/AppData\\Roaming\\Python\\Python313\\Scripts\\comfy-mcp.exe",
+      "args": [],
+      "env": {
+        "COMFYUI_URL": "http://127.0.0.1:8088",
+        "COMFY_LOCAL_URL": "http://127.0.0.1:8088",
+        "COMFYUI_PORT": "8088"
+      },
+      "enabled": true,
+      "shortcuts": []
+    },
+    "n8n": {
+      "id": "n8n",
+      "name": "n8n-mcp",
+      "description": "n8n iş akışı otomasyonu, agent builder, workflow oluşturma ve çalıştırma.",
+      "transport": "http",
+      "url": "http://localhost:9876/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer ${N8N_TOKEN}"
+      },
+      "enabled": true,
+      "shortcuts": []
+    },
+    "rea": {
+      "id": "rea",
+      "name": "rea",
+      "description": "Tersine mühendislik (reverse engineering), Android APK analizi, Ghidra/IDA native disasm, fonksiyon ve talimat çözümleme (200+ uzman araç).",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "rea-agents",
+        "--mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "unreal": {
+      "id": "unreal",
+      "name": "unreal-mcp",
+      "description": "Unreal Engine 5 editör otomasyonu, aktör, blueprint, level ve asset yönetimi.",
+      "transport": "http",
+      "url": "http://127.0.0.1:8000/mcp",
+      "enabled": true,
+      "shortcuts": []
+    },
+    "unity": {
+      "id": "unity",
+      "name": "unityMCP",
+      "description": "Unity 3D oyun motoru hiyerarşi, GameObject, component ve C# script kontrolü.",
+      "transport": "http",
+      "url": "http://127.0.0.1:9000/mcp",
+      "enabled": true,
+      "shortcuts": []
+    },
+    "blender": {
+      "id": "blender",
+      "name": "blender",
+      "description": "Blender 3D modelleme, bpy Python scriptleri, obje oluşturma ve render işlemleri.",
+      "transport": "stdio",
+      "command": "uvx",
+      "args": [
+        "blender-mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "prompts": {
+      "id": "prompts",
+      "name": "prompts.chat",
+      "description": "Yapay zeka sistemleri için hazır prompt kütüphanesi (Awesome ChatGPT Prompts): Prompt arama, şablon getirme ve değişken doldurma.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "prompts.chat",
+        "mcp"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "has-search": {
+      "id": "has-search",
+      "name": "has-search-mcp-server",
+      "description": "Büyük doküman indeksleme ve anlamsal vektör arama (RAG). 1000+ sayfalık PDF, Markdown (.md) ve metin (.txt) dokümanlarını yerel LanceDB ve yerel MiniLM modeliyle indeksler, en alakalı parçaları yüksek hızda getirir.",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "has-search-mcp-server",
+        "node",
+        "dist/index.js"
+      ],
+      "enabled": true,
+      "shortcuts": [
+        "index_document",
+        "search_document",
+        "list_indexed_documents",
+        "clear_index"
+      ]
+    },
+    "moneyprinter": {
+      "id": "moneyprinter",
+      "name": "moneyprinter",
+      "description": "MoneyPrinterTurbo otomatik video üretimi: Konu veya metinden kısa video (Shorts/Reels/TikTok) oluşturma, senaryo, seslendirme (TTS), altyazı ve stok video kurgulama.",
+      "transport": "stdio",
+      "command": "C:/Users/USERNAME/Desktop/apps/MoneyPrinterTurbo/venv/Scripts/python.exe",
+      "args": [
+        "C:/Users/USERNAME/Desktop/apps/MoneyPrinterTurbo/mpt_mcp.py"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "gods-eye-view": {
+      "id": "gods-eye-view",
+      "name": "gods-eye-view",
+      "description": "God's Eye View 3D dünya ve gerçek zamanlı OSINT/GEOINT istihbarat konsolu: Canlı uçuşlar, askeri hava trafiği, gemiler (AIS), uydular, depremler, yangınlar, kameralar (CCTV/ALPR), hava durumu, denizaltı kabloları ve harita görünümü.",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "gods-eye-view-gods-eye-view-1",
+        "node",
+        "server/mcp/stdio.js",
+        "--api-base",
+        "http://127.0.0.1:4173"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "whatsapp": {
+      "id": "whatsapp",
+      "name": "whatsapp-whiskeysocket",
+      "description": "WhatsApp çoklu hesap ve oturum yönetimi (Baileys): Bireysel ve grup mesajlaşma (metin, medya, sesli not, konum, kartvizit, anket, reaksiyon), QR kod ile oturum açma, profil, durum/hikaye paylaşımı ve ilişkisel aktivite geçmişi.",
+      "transport": "http",
+      "url": "http://localhost:3002/mcp",
+      "enabled": true,
+      "shortcuts": []
+    }
+  }
+}

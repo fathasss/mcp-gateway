@@ -6,8 +6,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { toolRegistry } from "./tool-registry.js";
 import { clientPool, loadConfig } from "./client-pool.js";
+import { LOCALES, getActiveLanguage } from "./i18n/locales.js";
 
 export function createOrchestratorServer() {
+  const lang = getActiveLanguage();
+  const t = LOCALES[lang] || LOCALES.tr;
+
   const server = new Server(
     {
       name: "mcp-gateway",
@@ -20,26 +24,25 @@ export function createOrchestratorServer() {
     }
   );
 
-  // Gemini'ye sunulan çekirdek orkestratör araçları
+  // Gemini ve Claude'a sunulan çekirdek orkestratör araçları
   const CORE_TOOLS = [
     {
       name: "search_tools",
-      description:
-        "İhtiyaç duyulan işleme uygun MCP araçlarını ve parametre şemalarını arar (örn: 'süpürge', 'tv', 'apk analizi', 'not arama', 'web scraping'). Bir işlem yapmadan önce doğru aracı bulmak için çağrılır.",
+      description: t.coreTools.search_tools.description,
       inputSchema: {
         type: "object",
         properties: {
           query: {
             type: "string",
-            description: "Aranacak işlem veya araç terimleri (örn: 'süpürge durumu', 'not ara', 'apk disasm')",
+            description: t.coreTools.search_tools.queryDesc,
           },
           server: {
             type: "string",
-            description: "İsteğe bağlı: Belirli bir sunucuda arama yapmak için ('house', 'rea', 'obsidian', 'crw', 'comfyui', 'n8n')",
+            description: t.coreTools.search_tools.serverDesc,
           },
           limit: {
             type: "number",
-            description: "Döndürülecek maksimum araç sayısı (varsayılan: 8)",
+            description: t.coreTools.search_tools.limitDesc,
           },
         },
         required: ["query"],
@@ -47,22 +50,21 @@ export function createOrchestratorServer() {
     },
     {
       name: "call_tool",
-      description:
-        "Belirtilen alt MCP sunucusundaki aracı verilen parametrelerle çalıştırır.",
+      description: t.coreTools.call_tool.description,
       inputSchema: {
         type: "object",
         properties: {
           server: {
             type: "string",
-            description: "Aracın ait olduğu sunucu ID'si (örn: 'house', 'rea', 'obsidian', 'crw', 'comfyui', 'n8n')",
+            description: t.coreTools.call_tool.serverDesc,
           },
           tool: {
             type: "string",
-            description: "Çalıştırılacak aracın adı (örn: 'vacuum_get_status', 'tv_power', 'read_file')",
+            description: t.coreTools.call_tool.toolDesc,
           },
           arguments: {
             type: "object",
-            description: "Araca gönderilecek parametreler",
+            description: t.coreTools.call_tool.argumentsDesc,
           },
         },
         required: ["server", "tool"],
@@ -70,7 +72,7 @@ export function createOrchestratorServer() {
     },
     {
       name: "list_mcp_servers",
-      description: "Gateway arkasında bağlı tüm alt MCP sunucularını, durumlarını ve araç sayılarını listeler.",
+      description: t.coreTools.list_mcp_servers.description,
       inputSchema: {
         type: "object",
         properties: {},
@@ -78,16 +80,16 @@ export function createOrchestratorServer() {
     },
     {
       name: "refresh_tools_index",
-      description: "Tüm alt MCP sunucularını yeniden tarayarak araç indeksini günceller.",
+      description: t.coreTools.refresh_tools_index.description,
       inputSchema: {
         type: "object",
         properties: {},
       },
     },
-    // Sık kullanılan doğrudan kısayollar (Kullanıcı doğrudan tek kelimeyle süpürgeyi sorgulayabilsin diye)
+    // Sık kullanılan doğrudan kısayollar
     {
       name: "vacuum_get_status",
-      description: "Robot süpürgenin (Ferhunde) anlık durumunu, pil seviyesini ve şarjını doğrudan sorgular.",
+      description: t.coreTools.vacuum_get_status.description,
       inputSchema: {
         type: "object",
         properties: {},
@@ -95,7 +97,7 @@ export function createOrchestratorServer() {
     },
     {
       name: "vacuum_locate",
-      description: "Robot süpürgenin yerini bulmak için ses çıkarmasını ('Buradayım!') sağlar.",
+      description: t.coreTools.vacuum_locate.description,
       inputSchema: {
         type: "object",
         properties: {},
@@ -103,7 +105,7 @@ export function createOrchestratorServer() {
     },
     {
       name: "tv_get_status",
-      description: "Samsung TV'nin açık/kapalı durumunu ve ağ bilgilerini sorgular.",
+      description: t.coreTools.tv_get_status.description,
       inputSchema: {
         type: "object",
         properties: {},
@@ -111,14 +113,14 @@ export function createOrchestratorServer() {
     },
     {
       name: "tv_power",
-      description: "Samsung TV'yi açar ('on') veya kapatır ('off').",
+      description: t.coreTools.tv_power.description,
       inputSchema: {
         type: "object",
         properties: {
           action: {
             type: "string",
             enum: ["on", "off"],
-            description: "İşlem: 'on' (aç) veya 'off' (kapat)",
+            description: t.coreTools.tv_power.actionDesc,
           },
         },
         required: ["action"],
@@ -199,7 +201,7 @@ export function createOrchestratorServer() {
           content: [
             {
               type: "text",
-              text: `İndeks başarıyla güncellendi. Toplam ${updated.tools.length} araç kaydedildi.`,
+              text: t.messages.indexSuccess(updated.tools.length),
             },
           ],
         };
@@ -214,10 +216,10 @@ export function createOrchestratorServer() {
         });
       }
 
-      throw new Error(`Bilinmeyen araç: ${name}`);
+      throw new Error(t.messages.unknownTool(name));
     } catch (err) {
       return {
-        content: [{ type: "text", text: `[Gateway Hatası] ${err.message}` }],
+        content: [{ type: "text", text: t.messages.gatewayError(err.message) }],
         isError: true,
       };
     }
@@ -227,8 +229,10 @@ export function createOrchestratorServer() {
 }
 
 export async function startOrchestrator() {
+  const lang = getActiveLanguage();
+  const t = LOCALES[lang] || LOCALES.tr;
   const server = createOrchestratorServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("[Gateway] MCP Gateway başarıyla çalışıyor.");
+  console.error(t.messages.gatewayStarted);
 }

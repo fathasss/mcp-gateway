@@ -5,6 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getTranslation } from "./i18n/locales.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = path.join(__dirname, "..", "config.json");
@@ -49,13 +50,14 @@ class ClientPool {
     }
 
     const config = loadConfig();
+    const t = getTranslation();
     const serverConf = config.servers[serverId];
     if (!serverConf) {
-      throw new Error(`Bilinmeyen alt MCP sunucusu: ${serverId}`);
+      throw new Error(t.messages.unknownServer(serverId));
     }
 
     if (!serverConf.enabled) {
-      throw new Error(`MCP sunucusu devre dışı bırakılmış: ${serverId}`);
+      throw new Error(t.messages.serverDisabled(serverId));
     }
 
     const client = new Client(
@@ -83,7 +85,7 @@ class ClientPool {
         });
         await client.connect(transport);
       } catch (err) {
-        console.error(`[Gateway] ${serverId} StreamableHTTP denemesi başarısız oldu, SSE deneniyor: ${err.message}`);
+        console.error(t.messages.streamableHttpFallback(serverId, err.message));
         const sseTransport = new SSEClientTransport(targetUrl, {
           headers: resolveHeaders(serverConf.headers),
         });
