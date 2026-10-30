@@ -11,7 +11,7 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 2. Her bir prompt sorgusunda yüzlerce fonksiyon şeması modele gönderildiğinden sorgu başına **80.000+ gereksiz token** harcanır.
 3. Editörler (Unreal, Unity vb.) kapalı olduğunda istemci bağlantı hataları verir.
 
-**MCP Gateway**, arka plandaki **310+ aracı** Gemini'ye sadece **8 temel araç** olarak sunar. İhtiyaç duyulan fonksiyonları dinamik indeks üzerinden arar (`search_tools`) ve çalıştırır (`call_tool`).
+**MCP Gateway**, arka plandaki **400+ aracı** Gemini'ye sadece **8 temel araç** olarak sunar. İhtiyaç duyulan fonksiyonları dinamik indeks üzerinden arar (`search_tools`) ve çalıştırır (`call_tool`).
 
 ---
 
@@ -33,10 +33,10 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
                                  [ mcp-gateway ]
                                         │
       ┌───────────┬───────────┬─────────┼─────────┬───────────┬───────────┐
-      │ (stdio)   │ (stdio)   │ (stdio) │ (stdio) │ (HTTP)    │ (Stream)  │ (HTTP)
+      │ (stdio)   │ (stdio)   │ (stdio) │ (stdio) │ (HTTP)    │ (Stream)  │ (Çoklu)
       ▼           ▼           ▼         ▼         ▼           ▼           ▼
-   [House]      [REA]    [Obsidian]   [CRW]     [n8n]      [Unreal]    [Unity]
-  (15 Araç)   (207 Araç)  (14 Araç)  (8 Araç)  (55 Araç)    (3 Araç)     (...)
+   [House]      [REA]    [Obsidian]   [CRW]     [n8n]      [Unreal]   [GEV/Diğer]
+  (18 Araç)   (207 Araç)  (14 Araç)  (8 Araç)  (55 Araç)    (3 Araç)   (30+ Araç)
       │                                                       │
   [Docker]                                                [Port 8000]
  (Ferhunde)                                                (UE5 MCP)
@@ -48,17 +48,19 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 
 | Sunucu Adı | Taşıma | Açıklama | Araç Sayısı |
 | :--- | :--- | :--- | :--- |
-| **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max ("Ferhunde") süpürge ve Samsung Smart TV kontrolü | 15 araç |
+| **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max ("Ferhunde") süpürge ve Samsung Smart TV kontrolü | 18 araç |
 | **`rea`** | stdio (npx) | Tersine mühendislik: APK, Ghidra, IDA, radare2, decompilation analizi | 207 araç |
-| **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma | 55 araç |
-| **`unreal`** | StreamableHTTP | Unreal Engine 5 editör otomasyonu, aktör, level, blueprint yönetimi (`:8000`) | 3 araç |
-| **`unity`** | http (`:9000`) | Unity 3D hiyerarşi, GameObject, bileşen ve C# script kontrolü | Dinamik |
-| **`blender`** | stdio (uvx) | Blender 3D modelleme, bpy Python scriptleri ve render | 9 araç |
+| **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma (`:9876`) | 55 araç |
+| **`comfyui`** | stdio (exe) | ComfyUI yerel görsel üretim iş akışları ve model yönetimi (`:8088`) | 39 araç |
+| **`gods-eye-view`** | stdio (Docker) | 3D dünya ve gerçek zamanlı OSINT/GEOINT konsolu: Uçuş, askeri hava trafiği, gemi (AIS), uydu, deprem, yangın, CCTV/ALPR kamera (`:4173`) | 30 araç |
+| **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo otomatik kısa video (Shorts/Reels/TikTok), senaryo, TTS ve altyazı üretimi | 17 araç |
 | **`obsidian`** | stdio (npx) | Yerel Obsidian bilgi kasası not okuma, yazma ve dosya işlemleri | 14 araç |
+| **`blender`** | stdio (uvx) | Blender 3D modelleme, bpy Python scriptleri ve render | 9 araç |
 | **`crw`** | stdio (npx) | Canlı internet erişimi, Markdown dönüştürücü ve web scraping | 8 araç |
-| **`comfyui`** | stdio (cmd) | ComfyUI yerel görsel üretim iş akışları | Dinamik |
+| **`has-search`** | stdio (Docker) | Büyük doküman indeksleme (PDF, MD, TXT) ve yerel LanceDB + MiniLM anlamsal arama (RAG) | 4 araç |
+| **`unreal`** | StreamableHTTP | Unreal Engine 5 editör otomasyonu, aktör, level, blueprint yönetimi (`:8000`) | 3 araç |
 | **`prompts`** | stdio (npx) | Hazır prompt şablonları kütüphanesi (Awesome ChatGPT Prompts) | 2 araç |
-| **`browser-use`** | stdio (Docker) | Tarayıcı otomasyonu: Sayfa açma, gezinme, tıklama, form doldurma, ekran görüntüsü | 16 araç |
+| **`unity`** | http (`:9000`) | Unity 3D hiyerarşi, GameObject, bileşen ve C# script kontrolü | Dinamik |
 
 ---
 
@@ -124,6 +126,10 @@ Gemini CLI ayar dosyanıza (`~/.gemini/settings.json`) sadece gateway'i eklemeni
 - **Tersine Mühendislik:**  
   `> Şu APK dosyasının manifestini analiz et`  
   *(Gateway 207 araç içinden uygun REA analiz aracını dinamik seçer)*
+
+- **God's Eye View (OSINT / Harita):**  
+  `> Son 24 saatteki depremleri getir ve haritada göster`  
+  *(Gateway `gods-eye-view` üzerinden `get_earthquakes` aracını çalıştırıp canlı harita bağlantısı döner)*
 
 - **İndeks Yenileme:**  
   `> MCP indeksini yenile`  

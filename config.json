@@ -69,7 +69,7 @@
       "name": "n8n-mcp",
       "description": "n8n iş akışı otomasyonu, agent builder, workflow oluşturma ve çalıştırma.",
       "transport": "http",
-      "url": "http://localhost:8678/mcp-server/http",
+      "url": "http://localhost:9876/mcp-server/http",
       "headers": {
         "Authorization": "Bearer ${N8N_TOKEN}"
       },
@@ -134,18 +134,53 @@
       "enabled": true,
       "shortcuts": []
     },
-    "browser-use": {
-      "id": "browser-use",
-      "name": "browser-use",
-      "description": "Browser Use web tarayıcı otomasyonu: Sayfa açma, gezinme, tıklama, form doldurma, veri çıkarma ve ekran görüntüsü alma.",
+    "has-search": {
+      "id": "has-search",
+      "name": "has-search-mcp-server",
+      "description": "Büyük doküman indeksleme ve anlamsal vektör arama (RAG). 1000+ sayfalık PDF, Markdown (.md) ve metin (.txt) dokümanlarını yerel LanceDB ve yerel MiniLM modeliyle indeksler, en alakalı parçaları yüksek hızda getirir.",
       "transport": "stdio",
       "command": "docker",
       "args": [
         "exec",
         "-i",
-        "browseruse-daemon",
-        "browser-use",
-        "--mcp"
+        "has-search-mcp-server",
+        "node",
+        "dist/index.js"
+      ],
+      "enabled": true,
+      "shortcuts": [
+        "index_document",
+        "search_document",
+        "list_indexed_documents",
+        "clear_index"
+      ]
+    },
+    "moneyprinter": {
+      "id": "moneyprinter",
+      "name": "moneyprinter",
+      "description": "MoneyPrinterTurbo otomatik video üretimi: Konu veya metinden kısa video (Shorts/Reels/TikTok) oluşturma, senaryo, seslendirme (TTS), altyazı ve stok video kurgulama.",
+      "transport": "stdio",
+      "command": "C:/Users/fatih/Desktop/apps/MoneyPrinterTurbo/venv/Scripts/python.exe",
+      "args": [
+        "C:/Users/fatih/Desktop/apps/MoneyPrinterTurbo/mpt_mcp.py"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "gods-eye-view": {
+      "id": "gods-eye-view",
+      "name": "gods-eye-view",
+      "description": "God's Eye View 3D dünya ve gerçek zamanlı OSINT/GEOINT istihbarat konsolu: Canlı uçuşlar, askeri hava trafiği, gemiler (AIS), uydular, depremler, yangınlar, kameralar (CCTV/ALPR), hava durumu, denizaltı kabloları ve harita görünümü.",
+      "transport": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "gods-eye-view-gods-eye-view-1",
+        "node",
+        "server/mcp/stdio.js",
+        "--api-base",
+        "http://127.0.0.1:4173"
       ],
       "enabled": true,
       "shortcuts": []
