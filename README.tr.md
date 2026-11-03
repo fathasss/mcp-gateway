@@ -56,11 +56,12 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 | :--- | :--- | :--- | :--- |
 | **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max ("Ferhunde") süpürge ve Samsung Smart TV kontrolü | 18 araç |
 | **`rea`** | stdio (npx) | Tersine mühendislik: APK, Ghidra, IDA, radare2, decompilation analizi | 207 araç |
-| **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma (`:9876`) | 55 araç |
+| **`n8n`** | http (SSE) | İş akışı otomasyonu, agent builder, workflow çalıştırma (`:7000`) | 55 araç |
 | **`comfyui`** | stdio (exe) | ComfyUI yerel görsel üretim iş akışları ve model yönetimi (`:8088`) | 39 araç |
 | **`whatsapp`** | StreamableHTTP | WhatsApp çoklu oturum, bireysel/grup mesajlaşma, medya, QR kod ve aktivite yönetimi (`:3002`) | 32 araç |
 | **`gods-eye-view`** | stdio (Docker) | 3D dünya ve gerçek zamanlı OSINT/GEOINT konsolu: Uçuş, askeri hava trafiği, gemi (AIS), uydu, deprem, yangın, CCTV/ALPR kamera (`:4173`) | 30 araç |
 | **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo otomatik kısa video (Shorts/Reels/TikTok), senaryo, TTS ve altyazı üretimi | 17 araç |
+| **`mail-server`** | stdio (npx) | IMAP ve SMTP protokolleri üzerinden e-posta okuma, arama, yanıtlama ve gönderme araçları | 14 araç |
 | **`obsidian`** | stdio (npx) | Yerel Obsidian bilgi kasası not okuma, yazma ve dosya işlemleri | 14 araç |
 | **`blender`** | stdio (uvx) | Blender 3D modelleme, bpy Python scriptleri ve render | 9 araç |
 | **`crw`** | stdio (npx) | Canlı internet erişimi, Markdown dönüştürücü ve web scraping | 8 araç |
@@ -87,7 +88,7 @@ Bazı MCP sunucuları varsayılan olarak aynı portları kullanır veya yerel se
 
 * **Unreal Engine 5 MCP (`:8000`):** Unreal Engine MCP eklentisi varsayılan `8000` portundan Streamable HTTP olarak yayın yapar.
 * **Unity 3D MCP (`:9000`):** Unity MCP sunucusu da varsayılan olarak `8000` portunu kullanmak ister. Port çakışmasını önlemek adına Unity tarafında dinleme portu `9000` olarak yapılandırılmıştır (`http://127.0.0.1:9000/mcp`).
-* **n8n Automation (`:9876`):** n8n varsayılan portu `5678` yerine Docker üzerinde `9876` dış portuna yönlendirilmiştir (`http://localhost:9876/mcp-server/http`).
+* **n8n Automation (`:7000`):** n8n varsayılan portu `5678` yerine Docker üzerinde `7000` dış portuna yönlendirilmiştir (`http://localhost:7000/mcp-server/http`).
 * **ComfyUI (`:8088`):** Standart `8188` portu yerine `8088` üzerinde çalışır.
 * **God's Eye View (`:4173`):** Web arayüzü ve API dev sunucusu `4173` portundadır.
 * **WhatsApp WhiskeySocket (`:3002`):** Baileys MCP Streamable HTTP servisi `3002` portunda çalışır (`http://localhost:3002/mcp`).

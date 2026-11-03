@@ -57,15 +57,27 @@ export const SYNONYM_MAP = {
 
   // Web & Arama
   "arama": ["search", "query", "find", "crawl"],
+  "ara": ["search", "find", "query"],
+  "oku": ["read", "get", "fetch", "inbox"],
+  "read": ["oku", "getir"],
   "web": ["crawler", "scrape", "markdown", "crw"],
-  "search": ["arama", "bul", "sorgula"],
+  "search": ["arama", "ara", "bul", "sorgula"],
 
   // Hava Durumu
   "hava": ["weather", "wind", "radar", "cyclone"],
   "ruzgar": ["wind", "forecast"],
   "rüzgar": ["wind", "forecast"],
   "weather": ["hava", "durum", "meteoroloji", "yagis"],
-  "wind": ["ruzgar", "rüzgar", "firtina"]
+  "wind": ["ruzgar", "rüzgar", "firtina"],
+
+  // E-Posta & Mail
+  "eposta": ["email", "mail", "send", "inbox", "message"],
+  "e-posta": ["email", "mail", "send", "inbox", "message"],
+  "mail": ["email", "eposta", "send_email", "search_messages", "inbox"],
+  "email": ["eposta", "mail", "send", "inbox", "messages"],
+  "gonder": ["send", "post", "dispatch"],
+  "gönder": ["send", "post", "dispatch"],
+  "send": ["gonder", "gönder", "ilet"]
 };
 
 export function expandSearchTerms(query) {

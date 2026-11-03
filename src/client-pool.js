@@ -27,6 +27,14 @@ if (fs.existsSync(envPath)) {
   }
 }
 
+function resolveEnvVars(envObj = {}) {
+  const resolved = {};
+  for (const [k, v] of Object.entries(envObj)) {
+    resolved[k] = typeof v === "string" ? v.replace(/\${([^}]+)\}/g, (_, name) => process.env[name] || "") : v;
+  }
+  return resolved;
+}
+
 function resolveHeaders(headers = {}) {
   const resolved = {};
   for (const [k, v] of Object.entries(headers)) {
@@ -102,7 +110,7 @@ class ClientPool {
       const transport = new StdioClientTransport({
         command: cmd,
         args: serverConf.args || [],
-        env: { ...process.env, ...(serverConf.env || {}) },
+        env: { ...process.env, ...resolveEnvVars(serverConf.env || {}) },
       });
       await client.connect(transport);
     }

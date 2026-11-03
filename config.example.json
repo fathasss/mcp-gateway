@@ -69,7 +69,7 @@
       "name": "n8n-mcp",
       "description": "n8n iş akışı otomasyonu, agent builder, workflow oluşturma ve çalıştırma.",
       "transport": "http",
-      "url": "http://localhost:9876/mcp-server/http",
+      "url": "http://localhost:7000/mcp-server/http",
       "headers": {
         "Authorization": "Bearer ${N8N_TOKEN}"
       },
@@ -191,6 +191,64 @@
       "description": "WhatsApp çoklu hesap ve oturum yönetimi (Baileys): Bireysel ve grup mesajlaşma (metin, medya, sesli not, konum, kartvizit, anket, reaksiyon), QR kod ile oturum açma, profil, durum/hikaye paylaşımı ve ilişkisel aktivite geçmişi.",
       "transport": "http",
       "url": "http://localhost:3002/mcp",
+      "enabled": true,
+      "shortcuts": []
+    },
+    "brave-devtools": {
+      "id": "brave-devtools",
+      "name": "brave-devtools",
+      "description": "Brave tarayıcı uzantısı ve geliştirici araçları: Web sayfası DOM, CSS ve JavaScript inceleme, hata ayıklama ve performans analizi.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "brave-mcp",
+        "--autoConnect"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "playwright": {
+      "id": "playwright",
+      "name": "playwright",
+      "description": "Playwright tabanlı Brave tarayıcı otomasyonu ve görsel test araçları.",
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless",
+        "--executable-path",
+        "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+        "--caps=vision,pdf,devtools"
+      ],
+      "enabled": true,
+      "shortcuts": []
+    },
+    "mail-server": {
+      "id": "mail-server",
+      "name": "mail-server",
+      "description": {
+        "tr": "IMAP ve SMTP protokolleri üzerinden e-posta okuma, arama, taslak oluşturma ve gönderme araçları (Gmail).",
+        "en": "Email management tools for reading, searching, drafting, and sending emails via IMAP/SMTP (Gmail)."
+      },
+      "transport": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "mcp-mail-server"
+      ],
+      "env": {
+        "IMAP_HOST": "imap.gmail.com",
+        "IMAP_PORT": "993",
+        "IMAP_SECURE": "true",
+        "SMTP_HOST": "smtp.gmail.com",
+        "SMTP_PORT": "465",
+        "SMTP_SECURE": "true",
+        "EMAIL_USER": "${GMAIL_USER}",
+        "EMAIL_ADDRESS": "${GMAIL_USER}",
+        "EMAIL_PASS": "${GMAIL_APP_PASS}"
+      },
       "enabled": true,
       "shortcuts": []
     }

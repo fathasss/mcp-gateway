@@ -56,11 +56,12 @@ Google Gemini API and many modern LLM clients have strict **64 or 128 function d
 | :--- | :--- | :--- | :--- |
 | **`house`** | stdio (Docker) | SmartHome: Dreame D9 Max vacuum & Samsung Smart TV control | 18 tools |
 | **`rea`** | stdio (npx) | Reverse engineering: APK, Ghidra, IDA, radare2, decompilation analysis | 207 tools |
-| **`n8n`** | http (SSE) | Workflow automation, agent builder, workflow runner (`:9876`) | 55 tools |
+| **`n8n`** | http (SSE) | Workflow automation, agent builder, workflow runner (`:7000`) | 55 tools |
 | **`comfyui`** | stdio (exe) | ComfyUI local image generation workflows & model management (`:8088`) | 39 tools |
 | **`whatsapp`** | StreamableHTTP | WhatsApp multi-session, group/chat messaging, media, QR, activity history (`:3002`) | 32 tools |
 | **`gods-eye-view`** | stdio (Docker) | 3D globe real-time OSINT/GEOINT: Live flights, military radar, ships (AIS), satellites, quakes, CCTV/ALPR (`:4173`) | 30 tools |
 | **`moneyprinter`** | stdio (Python) | MoneyPrinterTurbo automated video generation (Shorts/Reels/TikTok), TTS, subtitles | 17 tools |
+| **`mail-server`** | stdio (npx) | Email client via IMAP & SMTP (reading, searching, threads, attachments, sending) | 14 tools |
 | **`obsidian`** | stdio (npx) | Local Obsidian knowledge vault note read/write & filesystem operations | 14 tools |
 | **`blender`** | stdio (uvx) | Blender 3D modeling, bpy Python scripts, rendering | 9 tools |
 | **`crw`** | stdio (npx) | Live internet access, Markdown conversion, web crawling & scraping | 8 tools |
@@ -87,7 +88,7 @@ Several MCP servers default to the same port or conflict with local web applicat
 
 * **Unreal Engine 5 MCP (`:8000`):** Default Unreal Engine MCP Streamable HTTP service.
 * **Unity 3D MCP (`:9000`):** Unity MCP defaults to `8000`. To prevent collisions with Unreal Engine, Unity MCP is configured to listen on port `9000` (`http://127.0.0.1:9000/mcp`).
-* **n8n Automation (`:9876`):** Mapped from internal `5678` to host `9876` (`http://localhost:9876/mcp-server/http`).
+* **n8n Automation (`:7000`):** Mapped from internal `5678` to host `7000` (`http://localhost:7000/mcp-server/http`).
 * **ComfyUI (`:8088`):** Runs on port `8088` instead of default `8188`.
 * **God's Eye View (`:4173`):** Web client & API proxy dev server operates on port `4173`.
 * **WhatsApp WhiskeySocket (`:3002`):** Baileys MCP Streamable HTTP endpoint runs on port `3002` (`http://localhost:3002/mcp`).
