@@ -17,22 +17,21 @@ Google Gemini API ve pek çok modern LLM istemcisi **64 veya 128 fonksiyon dekla
 2. Her bir prompt sorgusunda yüzlerce fonksiyon şeması modele gönderildiğinden sorgu başına **80.000+ gereksiz token** harcanır.
 3. Editörler (Unreal, Unity vb.) kapalı olduğunda istemci bağlantı hataları verir.
 
-**MCP Gateway**, arka plandaki **400+ aracı** Gemini'ye sadece **8 temel araç** olarak sunar. İhtiyaç duyulan fonksiyonları dinamik indeks üzerinden arar (`search_tools`) ve çalıştırır (`call_tool`).
+**MCP Gateway**, arka plandaki tüm alt sunucuları LLM'e yalnızca **5 temel orkestratör aracı** (`~833` tahmini token / `3.333` byte şema yükü + isteğe bağlı kullanıcı kısayolları) olarak sunar. İhtiyaç duyulan fonksiyonları dinamik indeks üzerinden arar (`search_tools`), yeni sunucuları anında bağlar (`manage_mcp_server`) ve çalıştırır (`call_tool`).
 
 ---
 
 ## 🏛️ Mimari Şema
 
 ```
-                                  [ Gemini CLI / Claude ]
-                           (Sadece 8 araç görür: ~300 token yükü)
-                             ├── search_tools (Araç arama)
-                             ├── call_tool (Dinamik çalıştırma)
-                             ├── list_mcp_servers (Sunucu durumları)
-                             ├── refresh_tools_index (İndeks güncelleme)
-                             └── [Hızlı Kısayollar]
-                                   ├── vacuum_get_status / vacuum_locate
-                                   └── tv_get_status / tv_power
+                                  [ Claude / Cursor / Gemini CLI ]
+                           (Yalnızca 5 çekirdek araç: ~833 tahmini token)
+                             ├── search_tools (Dinamik araç keşfi)
+                             ├── call_tool (Alt sunucu çalıştırma)
+                             ├── manage_mcp_server (Canlı sunucu ekleme/yönetme)
+                             ├── list_mcp_servers (Sunucu sağlık ve araç sayıları)
+                             ├── refresh_tools_index (İndeks yenileme)
+                             └── [İsteğe Bağlı Kısayollar: config.json shortcuts]
                                             │
                                             │ (stdio)
                                             ▼

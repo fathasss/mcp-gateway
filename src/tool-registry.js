@@ -1,33 +1,42 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { clientPool, loadConfig } from "./client-pool.js";
+import { clientPool, getGatewayPaths, loadConfig } from "./client-pool.js";
 import { expandSearchTerms } from "./i18n/synonyms.js";
 import { getTranslation } from "./i18n/locales.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const cachePath = path.join(__dirname, "..", "tools-cache.json");
+import { redactSecretsFromText, writeFileAtomic } from "./security.js";
 
 export class ToolRegistry {
   constructor() {
     this.cacheMtime = 0;
+    this.lastCachePath = null;
     this.cache = this.loadCache();
   }
 
+  getCachePath() {
+    return getGatewayPaths().cachePath;
+  }
+
   loadCache() {
+    const cachePath = this.getCachePath();
+    this.lastCachePath = cachePath;
     if (fs.existsSync(cachePath)) {
       try {
         const stat = fs.statSync(cachePath);
         this.cacheMtime = stat.mtimeMs;
         return JSON.parse(fs.readFileSync(cachePath, "utf8"));
       } catch (e) {
-        console.error("[Registry] Cache okuma hatası:", e.message);
+        console.error("[Registry] Cache read error:", redactSecretsFromText(e.message));
       }
     }
+    this.cacheMtime = 0;
     return { lastUpdated: null, tools: [], serverSummaries: {} };
   }
 
   ensureFreshCache() {
+    const cachePath = this.getCachePath();
+    if (cachePath !== this.lastCachePath) {
+      this.cache = this.loadCache();
+      return;
+    }
     if (fs.existsSync(cachePath)) {
       try {
         const stat = fs.statSync(cachePath);
@@ -35,15 +44,17 @@ export class ToolRegistry {
           this.cache = JSON.parse(fs.readFileSync(cachePath, "utf8"));
           this.cacheMtime = stat.mtimeMs;
         }
-      } catch (e) {
-        // yoksay
+      } catch {
+        // ignore transient read error
       }
     }
   }
 
   saveCache(data) {
+    const cachePath = this.getCachePath();
+    this.lastCachePath = cachePath;
     this.cache = data;
-    fs.writeFileSync(cachePath, JSON.stringify(data, null, 2), "utf8");
+    writeFileAtomic(cachePath, JSON.stringify(data, null, 2) + "\n", "utf8");
     if (fs.existsSync(cachePath)) {
       this.cacheMtime = fs.statSync(cachePath).mtimeMs;
     }
@@ -83,12 +94,13 @@ export class ToolRegistry {
         }
         console.error(t.messages.indexedTools(serverId, tools.length));
       } catch (err) {
-        console.error(t.messages.indexingError(serverId, err.message));
+        const safeErr = redactSecretsFromText(err.message);
+        console.error(t.messages.indexingError(serverId, safeErr));
         summaries[serverId] = {
           name: sConf.name,
           description: sConf.description,
           toolCount: 0,
-          status: "error: " + err.message,
+          status: "error: " + safeErr,
         };
       }
     }

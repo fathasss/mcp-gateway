@@ -6,26 +6,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { toolRegistry } from "./tool-registry.js";
 import { clientPool, loadConfig } from "./client-pool.js";
+import { addServer, parseJsonConfig, removeServer, setServerEnabled } from "./manager.js";
 import { LOCALES, getActiveLanguage } from "./i18n/locales.js";
+import { redactConfigObject, redactSecretsFromText } from "./security.js";
 
-export function createOrchestratorServer() {
-  const lang = getActiveLanguage();
-  const t = LOCALES[lang] || LOCALES.tr;
-
-  const server = new Server(
-    {
-      name: "mcp-gateway",
-      version: "1.0.0",
-    },
-    {
-      capabilities: {
-        tools: {},
-      },
-    }
-  );
-
-  // Gemini ve Claude'a sunulan çekirdek orkestratör araçları
-  const CORE_TOOLS = [
+export function getCoreToolsDefinition(t) {
+  return [
     {
       name: "search_tools",
       description: t.coreTools.search_tools.description,
@@ -86,58 +72,128 @@ export function createOrchestratorServer() {
         properties: {},
       },
     },
-    // Sık kullanılan doğrudan kısayollar
     {
-      name: "vacuum_get_status",
-      description: t.coreTools.vacuum_get_status.description,
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-    {
-      name: "vacuum_locate",
-      description: t.coreTools.vacuum_locate.description,
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-    {
-      name: "tv_get_status",
-      description: t.coreTools.tv_get_status.description,
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-    {
-      name: "tv_power",
-      description: t.coreTools.tv_power.description,
+      name: "manage_mcp_server",
+      description: t.coreTools.manage_mcp_server.description,
       inputSchema: {
         type: "object",
         properties: {
           action: {
             type: "string",
-            enum: ["on", "off"],
-            description: t.coreTools.tv_power.actionDesc,
+            enum: ["add", "add_json", "remove", "enable", "disable"],
+            description: t.coreTools.manage_mcp_server.actionDesc,
+          },
+          id: {
+            type: "string",
+            description: t.coreTools.manage_mcp_server.idDesc,
+          },
+          transport: {
+            type: "string",
+            enum: ["stdio", "http", "streamableHttp", "sse"],
+            description: t.coreTools.manage_mcp_server.transportDesc,
+          },
+          url: {
+            type: "string",
+            description: t.coreTools.manage_mcp_server.urlDesc,
+          },
+          command: {
+            type: "string",
+            description: t.coreTools.manage_mcp_server.commandDesc,
+          },
+          args: {
+            type: "array",
+            items: { type: "string" },
+            description: t.coreTools.manage_mcp_server.argsDesc,
+          },
+          env: {
+            type: "object",
+            description: t.coreTools.manage_mcp_server.envDesc,
+          },
+          headers: {
+            type: "object",
+            description: t.coreTools.manage_mcp_server.headersDesc,
+          },
+          description: {
+            type: "string",
+            description: t.coreTools.manage_mcp_server.descriptionDesc,
+          },
+          json: {
+            description: t.coreTools.manage_mcp_server.jsonDesc,
+          },
+          verify: {
+            type: "boolean",
+            description: t.coreTools.manage_mcp_server.verifyDesc,
           },
         },
         required: ["action"],
       },
     },
   ];
+}
+
+export const CORE_TOOL_COUNT = getCoreToolsDefinition(LOCALES.en).length;
+
+function buildDynamicShortcuts(t) {
+  const config = loadConfig();
+  toolRegistry.ensureFreshCache();
+  const shortcutTools = [];
+  const shortcutOwnerMap = new Map();
+
+  for (const [serverId, sConf] of Object.entries(config.servers || {})) {
+    if (sConf.enabled === false || !Array.isArray(sConf.shortcuts)) continue;
+    for (const toolName of sConf.shortcuts) {
+      if (!toolName || shortcutOwnerMap.has(toolName)) continue;
+      shortcutOwnerMap.set(toolName, serverId);
+
+      const cachedTool = toolRegistry.getTool(serverId, toolName);
+      const localePreset = t.coreTools?.[toolName];
+
+      let inputSchema = cachedTool?.inputSchema || { type: "object", properties: {} };
+
+      shortcutTools.push({
+        name: toolName,
+        description: localePreset?.description || cachedTool?.description || `Shortcut tool '${toolName}' on server '${serverId}'`,
+        inputSchema,
+      });
+    }
+  }
+
+  return { shortcutTools, shortcutOwnerMap };
+}
+
+export function createOrchestratorServer() {
+  const lang = getActiveLanguage();
+  const t = LOCALES[lang] || LOCALES.tr;
+
+  const server = new Server(
+    {
+      name: "mcp-gateway",
+      version: "1.0.0",
+    },
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
+
+  // Core orchestrator tools exposed to the host AI agent
+  const BASE_CORE_TOOLS = getCoreToolsDefinition(t);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    return { tools: CORE_TOOLS };
+    const { shortcutTools } = buildDynamicShortcuts(t);
+    return { tools: [...BASE_CORE_TOOLS, ...shortcutTools] };
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args = {} } = request.params;
 
     try {
-      // 1. Arama Aracı
+      // 1. Search Tools
       if (name === "search_tools") {
+        if (typeof args.query !== "string") {
+          throw new Error("Missing or invalid 'query' parameter for search_tools.");
+        }
         const results = toolRegistry.searchTools(args.query, args.server, args.limit || 8);
         return {
           content: [
@@ -161,19 +217,21 @@ export function createOrchestratorServer() {
         };
       }
 
-      // 2. Alt Araç Çalıştırma
+      // 2. Call Downstream Tool
       if (name === "call_tool") {
-        const client = await clientPool.getClient(args.server);
-        const res = await client.callTool({
-          name: args.tool,
-          arguments: args.arguments || {},
-        });
-        return res;
+        if (!args.server || typeof args.server !== "string") {
+          throw new Error("Missing required 'server' parameter for call_tool.");
+        }
+        if (!args.tool || typeof args.tool !== "string") {
+          throw new Error("Missing required 'tool' parameter for call_tool.");
+        }
+        return await clientPool.callTool(args.server, args.tool, args.arguments || {});
       }
 
-      // 3. Sunucu Listesi
+      // 3. List MCP Servers
       if (name === "list_mcp_servers") {
         const config = loadConfig();
+        toolRegistry.ensureFreshCache();
         const summaries = toolRegistry.cache.serverSummaries || {};
         return {
           content: [
@@ -181,7 +239,7 @@ export function createOrchestratorServer() {
               type: "text",
               text: JSON.stringify(
                 {
-                  configuredServers: config.servers,
+                  configuredServers: redactConfigObject(config.servers || {}),
                   runtimeStatus: summaries,
                   totalIndexedTools: toolRegistry.cache.tools?.length || 0,
                   lastUpdated: toolRegistry.cache.lastUpdated,
@@ -194,7 +252,7 @@ export function createOrchestratorServer() {
         };
       }
 
-      // 4. İndeks Yenileme
+      // 4. Refresh Tools Index
       if (name === "refresh_tools_index") {
         const updated = await toolRegistry.refreshCache();
         return {
@@ -207,19 +265,73 @@ export function createOrchestratorServer() {
         };
       }
 
-      // Kısayollar: vacuum_get_status, vacuum_locate, tv_get_status, tv_power
-      if (["vacuum_get_status", "vacuum_locate", "tv_get_status", "tv_power"].includes(name)) {
-        const client = await clientPool.getClient("house");
-        return await client.callTool({
-          name: name,
-          arguments: args,
-        });
+      // 5. Hot-Plug / Manage MCP Server
+      if (name === "manage_mcp_server") {
+        const action = args.action;
+        if (action === "add") {
+          const result = await addServer({
+            id: args.id,
+            name: args.id,
+            description: args.description || "",
+            transport: args.transport || (args.url ? "http" : "stdio"),
+            url: args.url,
+            command: args.command,
+            args: args.args || [],
+            env: args.env || {},
+            headers: args.headers || {},
+            verify: args.verify !== false,
+          });
+          return {
+            content: [{ type: "text", text: JSON.stringify({ action: "add", ...result }, null, 2) }],
+          };
+        }
+
+        if (action === "add_json") {
+          if (!args.json) {
+            throw new Error(t.cli.jsonInputRequired);
+          }
+          const parsedServers = parseJsonConfig(args.json);
+          const results = [];
+          for (const srv of parsedServers) {
+            const r = await addServer({
+              ...srv,
+              verify: args.verify !== false,
+            });
+            results.push(r);
+          }
+          return {
+            content: [{ type: "text", text: JSON.stringify({ action: "add_json", servers: results }, null, 2) }],
+          };
+        }
+
+        if (action === "remove") {
+          const result = await removeServer(args.id);
+          return {
+            content: [{ type: "text", text: JSON.stringify({ action: "remove", ...result }, null, 2) }],
+          };
+        }
+
+        if (action === "enable" || action === "disable") {
+          const result = await setServerEnabled(args.id, action === "enable");
+          return {
+            content: [{ type: "text", text: JSON.stringify({ action, ...result }, null, 2) }],
+          };
+        }
+
+        throw new Error(`Unsupported manage_mcp_server action: ${action}`);
+      }
+
+      // 6. Dynamic Shortcuts (configured per server in config.json)
+      const { shortcutOwnerMap } = buildDynamicShortcuts(t);
+      if (shortcutOwnerMap.has(name)) {
+        const targetServerId = shortcutOwnerMap.get(name);
+        return await clientPool.callTool(targetServerId, name, args);
       }
 
       throw new Error(t.messages.unknownTool(name));
     } catch (err) {
       return {
-        content: [{ type: "text", text: t.messages.gatewayError(err.message) }],
+        content: [{ type: "text", text: t.messages.gatewayError(redactSecretsFromText(err.message)) }],
         isError: true,
       };
     }

@@ -4,11 +4,17 @@
   "description": "Multi-Agent MCP Gateway & Intelligent Tool Router for Gemini CLI",
   "main": "index.js",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "start": "node index.js",
     "refresh": "node refresh.js",
     "mcp": "node cli.js",
-    "mask": "node scripts/mask-config.js"
+    "mask": "node scripts/mask-config.js",
+    "migrate": "node scripts/auto-migrate.js",
+    "doctor": "node scripts/doctor.js",
+    "benchmark": "node scripts/benchmark.js",
+    "build:agensi": "node scripts/build-agensi-package.js",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1"

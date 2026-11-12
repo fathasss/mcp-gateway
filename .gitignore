@@ -4,4 +4,7 @@ node_modules/
 !.env.example
 config.json
 tools-cache.json
+dist/
 *.log
+docs/agensi-listing.md
+RELEASE-REVIEW.md

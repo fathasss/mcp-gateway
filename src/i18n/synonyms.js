@@ -84,8 +84,8 @@ export function expandSearchTerms(query) {
   if (!query || typeof query !== "string") return [];
   const rawTerms = query
     .toLowerCase()
-    .split(/\s+/)
-    .map(w => w.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, ""))
+    .split(/[\s_-]+/)
+    .map(w => w.replace(/[.,/#!$%^&*;:{}=`~()]/g, ""))
     .filter(w => w.length > 1);
 
   const termSet = new Set(rawTerms);

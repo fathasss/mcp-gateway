@@ -19,6 +19,20 @@ export const LOCALES = {
       refresh_tools_index: {
         description: "Tüm alt MCP sunucularını yeniden tarayarak araç indeksini ve önbelleğini günceller."
       },
+      manage_mcp_server: {
+        description: "Yeni bir MCP sunucusunu (stdio, http, streamableHttp, sse veya ham JSON) doğrudan MCP Gateway'e ekler, gizli anahtarları .env dosyasına ayırır, anında indeksler veya mevcut bir sunucuyu siler/aktif/pasif yapar.",
+        actionDesc: "İşlem türü: 'add' (tek sunucu ekle), 'add_json' (JSON veya mcpServers nesnesi ekle), 'remove' (sil), 'enable' (aktif et), 'disable' (devre dışı bırak)",
+        idDesc: "Sunucu kimliği (örn: 'github', 'postgres', 'meta-devtools')",
+        transportDesc: "Protokol: 'stdio' (varsayılan), 'http', 'streamableHttp' veya 'sse'",
+        urlDesc: "HTTP / StreamableHTTP / SSE sunucu adresi (url verildiğinde transport otomatik http olur)",
+        commandDesc: "stdio sunucusu için çalıştırılacak komut (örn: 'npx', 'node', 'docker', 'uvx')",
+        argsDesc: "stdio komutu için argüman dizisi (örn: ['-y', '@modelcontextprotocol/server-github'])",
+        envDesc: "Ortam değişkenleri nesnesi (hassas token/anahtarlar otomatik olarak .env dosyasına taşınır)",
+        headersDesc: "HTTP başlıkları nesnesi (örn: {'Authorization': 'Bearer ...'})",
+        descriptionDesc: "Sunucunun ne işe yaradığını anlatan kısa açıklama",
+        jsonDesc: "'add_json' işlemi için ham JSON dizesi veya mcpServers nesnesi",
+        verifyDesc: "Eklendikten sonra sunucuya bağlanıp araçlarını hemen indeksle (varsayılan: true)"
+      },
       vacuum_get_status: {
         description: "Robot süpürgenin (Ferhunde) anlık durumunu, pil seviyesini ve şarjını doğrudan sorgular."
       },
@@ -123,6 +137,20 @@ Seçenekler (add için):
       },
       refresh_tools_index: {
         description: "Re-scans all sub-MCP servers to refresh the dynamic tool registry and cache."
+      },
+      manage_mcp_server: {
+        description: "Hot-plugs a new MCP server (stdio, http, streamableHttp, sse, or raw JSON) directly into MCP Gateway, auto-extracts secrets to .env, indexes its tools immediately, or removes/enables/disables an existing server.",
+        actionDesc: "Action: 'add' (add single server), 'add_json' (import JSON/mcpServers block), 'remove' (delete server), 'enable' (enable server), 'disable' (disable server)",
+        idDesc: "Server ID (e.g., 'github', 'postgres', 'meta-devtools')",
+        transportDesc: "Transport protocol: 'stdio' (default), 'http', 'streamableHttp', or 'sse'",
+        urlDesc: "Endpoint URL for HTTP / StreamableHTTP / SSE servers (auto-selects http transport when set)",
+        commandDesc: "Executable command for stdio servers (e.g., 'npx', 'node', 'docker', 'uvx')",
+        argsDesc: "Arguments array for stdio command (e.g., ['-y', '@modelcontextprotocol/server-github'])",
+        envDesc: "Environment variables key-value object (sensitive tokens/keys are automatically moved to .env)",
+        headersDesc: "HTTP headers key-value object (e.g., {'Authorization': 'Bearer ...'})",
+        descriptionDesc: "Brief description of the server's capabilities",
+        jsonDesc: "Raw JSON string or mcpServers object for 'add_json'",
+        verifyDesc: "Connect and index server tools immediately after adding (default: true)"
       },
       vacuum_get_status: {
         description: "Quick status query for the robot vacuum (battery level, cleaning status, dock)."

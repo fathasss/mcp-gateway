@@ -41,7 +41,7 @@ async function main() {
       console.error(t.cli.idRequiredForCommand("remove"));
       process.exit(1);
     }
-    removeServer(id);
+    await removeServer(id);
     return;
   }
 
@@ -51,7 +51,7 @@ async function main() {
       console.error(t.cli.idRequiredForCommand(command));
       process.exit(1);
     }
-    setServerEnabled(id, command === "enable");
+    await setServerEnabled(id, command === "enable");
     return;
   }
 
@@ -99,6 +99,7 @@ async function main() {
 
     const restArgs = args.slice(2);
     let transport = "stdio";
+    let explicitTransport = false;
     let url = "";
     let desc = "";
     let descTr = "";
@@ -121,9 +122,10 @@ async function main() {
       const opt = optionsList[i];
       if (opt === "--transport" && optionsList[i + 1]) {
         transport = optionsList[++i];
+        explicitTransport = true;
       } else if (opt === "--url" && optionsList[i + 1]) {
         url = optionsList[++i];
-        transport = "http";
+        if (!explicitTransport) transport = "http";
       } else if (opt === "--desc" && optionsList[i + 1]) {
         desc = optionsList[++i];
       } else if (opt === "--desc-tr" && optionsList[i + 1]) {
